@@ -1,4 +1,3 @@
-
 __author__ = "samu.karli"
 __version__ = "2022.04.27"
 
@@ -45,7 +44,11 @@ for i in range(surf.BranchCount):
     
     for brep in branchList:
         item = brep.Surfaces[0]
-        if isinstance(item, Geometry.Surface) and \
-        (Geometry.AreaMassProperties.Compute(item).Centroid.Z > zBottom + epsilon or isNotVertical(item)):
-            List.Add(item, branchPath)
+
+        try:
+            if isinstance(item, Geometry.Surface) and \
+            (Geometry.AreaMassProperties.Compute(item).Centroid.Z > zBottom + epsilon or isNotVertical(item)):
+                List.Add(item, branchPath)
+        except TypeError:
+            continue
 

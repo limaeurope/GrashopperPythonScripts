@@ -39,10 +39,14 @@ for i in range(surf.BranchCount):
         if isinstance(item, Geometry.Surface):
             zTop = max(zTop, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
     
-    for brep in branchList:
-        item = brep.Surfaces[0]
-        if isinstance(item, Geometry.Surface) and \
-        (Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item)):
-            List.Add(brep, branchPath)
+        for brep in branchList:
+            item = brep.Surfaces[0]
+
+            try:
+                if isinstance(item, Geometry.Surface) and \
+                (Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item)):
+                    List.Add(brep, branchPath)
+            except TypeError:
+                continue
 
 print (List.BranchCount)
