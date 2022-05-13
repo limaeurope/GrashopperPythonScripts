@@ -16,6 +16,7 @@ if isTest:
 
 epsilon = 0.01
 
+
 from Rhino import Geometry
 import sys
 import pprint
@@ -33,13 +34,15 @@ for i in range(surf.BranchCount):
 
     zTop = -sys.float_info.max
 
-    for item in branchList:
+    for brep in branchList:
+        item = brep.Surfaces[0]
         if isinstance(item, Geometry.Surface):
             zTop = max(zTop, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
     
-    for item in branchList:
+    for brep in branchList:
+        item = brep.Surfaces[0]
         if isinstance(item, Geometry.Surface) and \
         (Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item)):
-            List.Add(item, branchPath)
+            List.Add(brep, branchPath)
 
-print (2)
+print (List.BranchCount)

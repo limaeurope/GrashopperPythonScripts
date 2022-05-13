@@ -6,7 +6,7 @@
     <ProjectGuid>{44dbc217-5fe9-4e46-8756-e551fce7b21c}</ProjectGuid>
     <ProjectHome />
     <StartupFile>main.py</StartupFile>
-    <SearchPath />
+    <SearchPath>..\..\..\..\Program Files\Rhino 7\Plug-ins\IronPython\Lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\Plug-ins\IronPython (814d908a-e25c-493d-97e9-ee3861957f49)\settings\lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\scripts;..\..\ladybug_tools\python\Lib\site-packages</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
