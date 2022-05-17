@@ -38,17 +38,19 @@ for i in range(surf.BranchCount):
     zBottom = sys.float_info.max
 
     for brep in branchList:
-        item = brep.Surfaces[0]
-        if isinstance(item, Geometry.Surface):
-            zBottom = min(zBottom, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
+        try:
+            item = brep.Surfaces[0]
+            if isinstance(item, Geometry.Surface):
+                zBottom = min(zBottom, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
+        except (TypeError, AttributeError):
+            continue
     
     for brep in branchList:
-        item = brep.Surfaces[0]
-
         try:
+            item = brep.Surfaces[0]
             if isinstance(item, Geometry.Surface) and \
             (Geometry.AreaMassProperties.Compute(item).Centroid.Z > zBottom + epsilon or isNotVertical(item)):
                 List.Add(item, branchPath)
-        except TypeError:
+        except (TypeError, AttributeError):
             continue
 
