@@ -5,14 +5,17 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{44dbc217-5fe9-4e46-8756-e551fce7b21c}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>main.py</StartupFile>
-    <SearchPath>..\..\..\..\Program Files\Rhino 7\Plug-ins\IronPython\Lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\Plug-ins\IronPython (814d908a-e25c-493d-97e9-ee3861957f49)\settings\lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\scripts;..\..\ladybug_tools\python\Lib\site-packages</SearchPath>
+    <StartupFile>
+    </StartupFile>
+    <SearchPath>..\..\..\..\Program Files\Rhino 7\Plug-ins\IronPython\Lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\Plug-ins\IronPython (814d908a-e25c-493d-97e9-ee3861957f49)\settings\lib;..\..\AppData\Roaming\McNeel\Rhinoceros\7.0\scripts;..\..\ladybug_tools\python\Lib\site-packages;..\..\..\..\Program Files\IronPython 2.7\Lib</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
-    <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>Global|IronPython|3.4</InterpreterId>
+    <LaunchProvider>IronPython (.NET) launcher</LaunchProvider>
+    <InterpreterId>IronPython|2.7-32</InterpreterId>
     <TestFramework>unittest</TestFramework>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <DebugStdLib>False</DebugStdLib>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -20,14 +23,13 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="main.py" />
-    <Compile Include="Remove Bottom Surface.py">
+    <Compile Include="test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Remove Top Surfaces.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|IronPython|3.4" />
+    <InterpreterReference Include="IronPython|2.7-32" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
