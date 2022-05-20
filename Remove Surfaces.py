@@ -1,7 +1,4 @@
-__author__ = "samu.karli"
-__version__ = "2022.04.27"
-
-hor__ = "samu.karli"
+__author___ = "samu.karli"
 __version__ = "2022.04.27"
 
 
@@ -14,7 +11,7 @@ if isTest:
         except:
             pass
 
-        ptvsd.wait_for_attach()
+        ptvsd.wait_for_attach(10)
 
 #----------------------------------------------------------------------------------
 
@@ -25,7 +22,6 @@ import sys
 import pprint
 from Grasshopper import DataTree as Tree
 
-
 def isNotVertical(p_):
     return not p_.NormalAt(0,0).IsParallelTo(Geometry.Vector3d(0,0,1)) in {1,-1}
 
@@ -35,12 +31,14 @@ for i in range(surf.BranchCount):
     branchList = surf.Branch(i)
     branchPath = surf.Path(i)
 
-    zTop = -sys.float_info.max
+    zExt = -sys.float_info.max if isTop else sys.float_info.max
+    fExt = max if isTop else min
+    fCriterium = lambda z : z < zExt - epsilon if isTop else z > zExt + epsilon
 
     for brep in branchList:
         try:
             item = brep.Surfaces[0]
-            zTop = max(zTop, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
+            zExt = fExt(zExt, Geometry.AreaMassProperties.Compute(item).Centroid.Z)
         except (TypeError, AttributeError):
             continue
     
@@ -48,7 +46,7 @@ for i in range(surf.BranchCount):
         try:
             if isinstance(brep, Geometry.Brep):
                 item = brep.Surfaces[0]
-                if Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item):
+                if fCriterium(Geometry.AreaMassProperties.Compute(item).Centroid.Z) or isNotVertical(item):
                     List.Add(brep, branchPath)
         except (TypeError, AttributeError):
             continue
