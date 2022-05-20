@@ -35,6 +35,8 @@ for i in range(surf.BranchCount):
     branchList = surf.Branch(i)
     branchPath = surf.Path(i)
 
+    print (branchPath)
+
     zBottom = sys.float_info.max
 
     for brep in branchList:
@@ -46,6 +48,7 @@ for i in range(surf.BranchCount):
     
     for brep in branchList:
         try:
+            print(brep)
             item = brep.Surfaces[0]
             if Geometry.AreaMassProperties.Compute(item).Centroid.Z > zBottom + epsilon or isNotVertical(item):
                 List.Add(brep, branchPath)

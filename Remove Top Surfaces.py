@@ -46,9 +46,10 @@ for i in range(surf.BranchCount):
     
     for brep in branchList:
         try:
-            item = brep.Surfaces[0]
-            if Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item):
-                List.Add(brep, branchPath)
+            if isinstance(brep, Geometry.Brep):
+                item = brep.Surfaces[0]
+                if Geometry.AreaMassProperties.Compute(item).Centroid.Z < zTop - epsilon or isNotVertical(item):
+                    List.Add(brep, branchPath)
         except (TypeError, AttributeError):
             continue
 
