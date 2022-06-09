@@ -23,10 +23,11 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="test.py">
+    <Compile Include="CountWindowsBySize.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Remove Top Surfaces.py" />
+    <Compile Include="Remove Surfaces.py" />
+    <Compile Include="Unit settings.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="IronPython|2.7-32" />
