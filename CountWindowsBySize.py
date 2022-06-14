@@ -13,7 +13,7 @@ __version__ = "2022.04.27"
 
 #        ptvsd.wait_for_attach(10)
 
-#----------------------------------------------------------------------------------
+##----------------------------------------------------------------------------------
 
 epsilon = 0.01
 
@@ -47,7 +47,7 @@ class counterDict():
                 del self.dict[key]
 
     def calcLength(self):
-        self.dec(int(zWall), 2)
+        self.dec(self.zWall, 2)
         return self.dict.keys()[0]
 
     def returnSizes():
@@ -61,29 +61,31 @@ for i in range(iBranch):
     breps = windows.Branch(i)      #list
     branchPath = windows.Path(i)
     path = Path(Array[int]([0, i]))
-    _dists=counterDict(zWall)
+    _zWall = zWall.Branch(i)[0]
+    _dists=counterDict(_zWall)
 
     for face in breps:
         _2 = list(face.Points)
         point2 = [_2[1], _2[3], _2[0], _2[2], ]
-        _points = counterDict(zWall)
+        _points = counterDict(_zWall)
 
         for point1, point2 in zip(face.Points, point2):
             dX = point1.X - point2.X
             dY = point1.Y - point2.Y
             dZ = point1.Z - point2.Z
             _dist = sqrt(dX ** 2 + dY ** 2 + dZ ** 2)
-            _points.inc(int(_dist))
+            _points.inc(round(_dist, 0))
 
         _dist = int(_points.calcLength())
         _dists.inc(_dist)
 
     sizes = sorted(_dists.dict.keys())
-    sizesTuple = (sizes[0], sizes[-1])
+    _zW = int(round(_zWall, 0))
+    sizesTuple = (sizes[0], sizes[-1], _zW)
     resultDict[sizesTuple] = resultDict[sizesTuple] + 1 if sizesTuple in resultDict else 1
 print(resultDict)
 
 path = Path(Array[int]([0]))
 
 for k, v in resultDict.iteritems():
-    List.Add(str(k[0]) + "x" + str(k[1]) + ": " + str(v), path)
+    List.Add(str(k[0]) + u"\u00D7" + str(k[1]) + u" (\u00D7" + str(k[2]) + ")" + ": " + str(v), path)
