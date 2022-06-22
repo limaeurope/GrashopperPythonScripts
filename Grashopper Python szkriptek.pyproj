@@ -32,5 +32,8 @@
   <ItemGroup>
     <InterpreterReference Include="IronPython|2.7-32" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Graft.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
