@@ -79,11 +79,11 @@ for i in range(iBranch):
         _dist = int(_points.calcLength())
         _dists.inc(_dist)
 
-    sizes = sorted(_dists.dict.keys())
-    _zW = int(round(_zWall, 0))
-    sizesTuple = (sizes[0], sizes[-1], _zW)
-    resultDict[sizesTuple] = resultDict[sizesTuple] + 1 if sizesTuple in resultDict else 1
-print(resultDict)
+    if _dists.dict:
+        sizes = sorted(_dists.dict.keys())
+        _zW = int(round(_zWall, 0))
+        sizesTuple = (sizes[0], sizes[-1], _zW)
+        resultDict[sizesTuple] = resultDict[sizesTuple] + 1 if sizesTuple in resultDict else 1
 
 path = Path(Array[int]([0]))
 
