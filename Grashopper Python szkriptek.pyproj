@@ -26,6 +26,9 @@
     <Compile Include="CountWindowsBySize.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MinBoundBox3d.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Remove Surfaces.py" />
     <Compile Include="Unit settings.py" />
   </ItemGroup>

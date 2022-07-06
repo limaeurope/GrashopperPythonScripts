@@ -1,7 +1,6 @@
 __author___ = "samu.karli"
 __version__ = "2022.04.27"
 
-
 #if isTest:
 #    import ptvsd
 
