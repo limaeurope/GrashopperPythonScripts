@@ -2,12 +2,14 @@ __author___ = "samu.karli"
 __version__ = "2022.07.01"
 
 """
-	selection:		Objects to have bounding boxes, tree access
-	epsilon:		If difference is smaller than this; optimization ends;							default: 0.001
-	isBoundaryOpt:	If True, optimize Perimeter for 2D and Area for 3D objects, else Area/Volume;	default: False
-	iStepVolume:	Step size for volume;															default: 7
-	iStepPlanar:	Step size for planar;															default: 17
-	iStepDivider:	Divider;																		default: 4
+	selection:				Objects to have bounding boxes, tree access
+	epsilon:				If difference is smaller than this; optimization ends;							default: 0.001
+	isBoundaryOpt:			If True, optimize Perimeter for 2D and Area for 3D objects, else Area/Volume;	default: False
+	iStepVolume:			Step size for volume;															default: 7
+	iStepPlanar:			Step size for planar;															default: 17
+	iStepDivider:			Divider;																		default: 4
+	iMaxIteration:			Max number of iterations;														default: 1000
+	doDrawIterationBoxes:	if True, draws a box for every iteration step									default: False
 """
 
 #----------------------------------------------------------------------------------
@@ -128,7 +130,7 @@ for i in range(iBranch):
 	
 	#--Main script
 	rs.EnableRedraw(False)
-	print("Please wait (Brute-force calculation may take a few minutes)")
+	#print("Please wait (Brute-force calculation may take a few minutes)")
 	if isPlanar:
 		startingCplane = detectedPlane													#Contents of ViewCplane from Detect_Planar function
 		loopStep = Rhino.Geometry.Vector3d.Divide(loopStep, iStepPlanar)				#Initial LoopStep size
@@ -194,7 +196,8 @@ for i in range(iBranch):
 						#--Found new minimum
 						boxMetric_delta = boxMetric_start - boxMetric_now				#The difference between the min box and the starting box from the beginning of this parsing
 						boxMetric_min = boxMetric_now
-						#rs.AddBox(tempBox)
+						if doDrawIterationBoxes:
+							rs.AddBox(tempBox)
 						bbox_min = tempBox												#This is the box to be drawn on screen
 						angle_min = Rhino.Geometry.Vector3d(aXY, aXZ, aYZ)
 					aXY += loopStep[0]
