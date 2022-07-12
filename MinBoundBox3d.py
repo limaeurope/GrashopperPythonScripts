@@ -54,7 +54,10 @@ def detect_planar(theseObj, tol):
 			vertices = rs.SurfacePoints(thisObj)
 			meshVertices += vertices
 		elif rs.IsPolysurface(thisObj):
-			isPlanar = rs.IsSurfacePlanar(thisObj)
+			try:
+				isPlanar = rs.IsSurfacePlanar(thisObj)
+			except ValueErrorException:
+				isPlanar = False
 			if not isPlanar:
 				break
 			rs.EnableRedraw(False)
