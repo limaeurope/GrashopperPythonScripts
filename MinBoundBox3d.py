@@ -56,7 +56,7 @@ def detect_planar(theseObj, tol):
 		elif rs.IsPolysurface(thisObj):
 			try:
 				isPlanar = rs.IsSurfacePlanar(thisObj)
-			except ValueErrorException:
+			except ValueError:
 				isPlanar = False
 			if not isPlanar:
 				break
