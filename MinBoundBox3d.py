@@ -47,7 +47,10 @@ def detect_planar(theseObj, tol):
 
 	#Parse the selection for preliminary object-identification --------------
 	for thisObj in theseObj:
-		if rs.IsCurve(thisObj):
+		if rs.IsBrep(thisObj):
+			vertices = rs.SurfacePoints(thisObj)
+			meshVertices += vertices
+		elif rs.IsCurve(thisObj):
 			vertices = rs.CurvePoints(thisObj)
 			meshVertices += vertices
 		elif rs.IsSurface(thisObj):
