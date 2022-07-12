@@ -47,66 +47,69 @@ def detect_planar(theseObj, tol):
 
 	#Parse the selection for preliminary object-identification --------------
 	for thisObj in theseObj:
-		if rs.IsBrep(thisObj):
-			vertices = rs.SurfacePoints(thisObj)
-			meshVertices += vertices
-		elif rs.IsCurve(thisObj):
-			vertices = rs.CurvePoints(thisObj)
-			meshVertices += vertices
-		elif rs.IsSurface(thisObj):
-			vertices = rs.SurfacePoints(thisObj)
-			meshVertices += vertices
-		elif rs.IsPolysurface(thisObj):
-			try:
-				isPlanar = rs.IsSurfacePlanar(thisObj)
-			except ValueError:
-				isPlanar = False
-			if not isPlanar:
-				break
-			rs.EnableRedraw(False)
-			rs.SelectObject(thisObj)
-			rs.Command("_SolidPtOn", False)
-			vertices = rs.ObjectGripLocations(thisObj)
-			meshVertices += vertices
-			rs.EnableObjectGrips(thisObj, False)
-		elif rs.IsPoint(thisObj): 
-			vertices = rs.PointCoordinates(thisObj)
-			meshVertices += [vertices]
-		elif rs.IsMesh(thisObj): 
-			vertices = rs.MeshVertices(thisObj)
-			meshVertices += vertices
-		#elif Rhino.IsExtrusion(thisObj):
-		#	Rhino.EnableRedraw  (False)
-		#	Rhino.EnableObjectGrips  (thisObj, True)
-		#	vertices = Rhino.SurfacePoints(thisObj)
-		#	meshVertices = Rhino.JoinArrays(meshVertices, vertices)
-		#	Rhino.EnableObjectGrips  (thisObj, False)
-		#elif rs.IsPointCloud(thisObj):
-		#	vertices = rs.PointCloudPoints(thisObj)
-		#	meshVertices += vertices
-		#elif rs.IsText(thisObj):
-		#	textPlane = rs.TextObjectPlane(thisObj)
-		#	vertices = [textPlane[0], rs.VectorAdd(textplane[1], textplane[0]), Rhino.VectorAdd(textplane[2], textplane[0])]
-		#	meshVertices += vertices
-		#elif rs.IsLight(thisObj):
-		#	lightPlane = rs.RectangularLightPlane(thisObj)
-		#	vertices = [lightPlane[0], rs.VectorAdd(lightplane[1], lightplane[0]), Rhino.VectorAdd(lightplane[2], lightplane[0])]
-		#	meshVertices += vertices
-		#elif rs.IsBlockInstance(thisObj):
-		#	objArr = rs.BlockObjects(Rhino.BlockInstanceId(thisObj))
-		#	isBlockPlanar = detect_planar(objArr, tol) #Recursion
-		#	if isBlockPlanar[0] < 0:
-		#		unsupported_obj = unsupported_obj + 1
-		#	if isBlockPlanar[0] == 0:
-		#	   isPlanar = False
-		#	#Get the origin and x and y vertices of the plane that this planar block is on
-		#	#Vertices need to be in world coordinates before going into the meshVertices array
-		#	blockXform = Rhino.BlockInstanceXform(thisObj)
-		#	temp_plane = Rhino.PlaneTransform(isBlockPlanar[1], blockXform) #origin in world coordinates
-		#	vertices = [temp_plane[0], Rhino.VectorAdd(temp_plane[1], temp_plane[0]), Rhino.VectorAdd(temp_plane[2], temp_plane[0])]
-		#	meshVertices = Rhino.JoinArrays(meshVertices, vertices)
-		#else:
-		#	break
+		try:
+			if rs.IsBrep(thisObj):
+				vertices = rs.SurfacePoints(thisObj)
+				meshVertices += vertices
+			elif rs.IsCurve(thisObj):
+				vertices = rs.CurvePoints(thisObj)
+				meshVertices += vertices
+			elif rs.IsSurface(thisObj):
+				vertices = rs.SurfacePoints(thisObj)
+				meshVertices += vertices
+			elif rs.IsPolysurface(thisObj):
+				try:
+					isPlanar = rs.IsSurfacePlanar(thisObj)
+				except ValueError:
+					isPlanar = False
+				if not isPlanar:
+					break
+				rs.EnableRedraw(False)
+				rs.SelectObject(thisObj)
+				rs.Command("_SolidPtOn", False)
+				vertices = rs.ObjectGripLocations(thisObj)
+				meshVertices += vertices
+				rs.EnableObjectGrips(thisObj, False)
+			elif rs.IsPoint(thisObj): 
+				vertices = rs.PointCoordinates(thisObj)
+				meshVertices += [vertices]
+			elif rs.IsMesh(thisObj): 
+				vertices = rs.MeshVertices(thisObj)
+				meshVertices += vertices
+			#elif Rhino.IsExtrusion(thisObj):
+			#	Rhino.EnableRedraw  (False)
+			#	Rhino.EnableObjectGrips  (thisObj, True)
+			#	vertices = Rhino.SurfacePoints(thisObj)
+			#	meshVertices = Rhino.JoinArrays(meshVertices, vertices)
+			#	Rhino.EnableObjectGrips  (thisObj, False)
+			#elif rs.IsPointCloud(thisObj):
+			#	vertices = rs.PointCloudPoints(thisObj)
+			#	meshVertices += vertices
+			#elif rs.IsText(thisObj):
+			#	textPlane = rs.TextObjectPlane(thisObj)
+			#	vertices = [textPlane[0], rs.VectorAdd(textplane[1], textplane[0]), Rhino.VectorAdd(textplane[2], textplane[0])]
+			#	meshVertices += vertices
+			#elif rs.IsLight(thisObj):
+			#	lightPlane = rs.RectangularLightPlane(thisObj)
+			#	vertices = [lightPlane[0], rs.VectorAdd(lightplane[1], lightplane[0]), Rhino.VectorAdd(lightplane[2], lightplane[0])]
+			#	meshVertices += vertices
+			#elif rs.IsBlockInstance(thisObj):
+			#	objArr = rs.BlockObjects(Rhino.BlockInstanceId(thisObj))
+			#	isBlockPlanar = detect_planar(objArr, tol) #Recursion
+			#	if isBlockPlanar[0] < 0:
+			#		unsupported_obj = unsupported_obj + 1
+			#	if isBlockPlanar[0] == 0:
+			#	   isPlanar = False
+			#	#Get the origin and x and y vertices of the plane that this planar block is on
+			#	#Vertices need to be in world coordinates before going into the meshVertices array
+			#	blockXform = Rhino.BlockInstanceXform(thisObj)
+			#	temp_plane = Rhino.PlaneTransform(isBlockPlanar[1], blockXform) #origin in world coordinates
+			#	vertices = [temp_plane[0], Rhino.VectorAdd(temp_plane[1], temp_plane[0]), Rhino.VectorAdd(temp_plane[2], temp_plane[0])]
+			#	meshVertices = Rhino.JoinArrays(meshVertices, vertices)
+			#else:
+			#	break
+		except TypeError:
+			return False, rs.ViewCPlane()
 	if isPlanar and rs.PointsAreCoplanar(meshVertices):
 		objectsPlane = rs.PlaneFitFromPoints(meshVertices)
 		return True, objectsPlane
