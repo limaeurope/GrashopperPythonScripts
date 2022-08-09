@@ -14,16 +14,16 @@ __version__ = "2022.07.01"
 
 #----------------------------------------------------------------------------------
 
-#if isTest:
-#    import ptvsd
+if isTest:
+    import ptvsd
 
-#    if not ptvsd.is_attached():
-#        try:
-#            ptvsd.enable_attach(secret = 'dev', address = ('localhost', 2019))
-#        except:
-#            pass
+    if not ptvsd.is_attached():
+        try:
+            ptvsd.enable_attach(secret = 'dev', address = ('localhost', 2019))
+        except:
+            pass
 
-#        ptvsd.wait_for_attach(10)
+        ptvsd.wait_for_attach(10)
 
 #----------------------------------------------------------------------------------
 
@@ -33,6 +33,7 @@ from Grasshopper.Kernel.Data import GH_Path as Path
 from System import Array, Guid
 import Rhino
 import ghpythonlib.components as ghcomp
+from math import atan
 
 result = Tree[object]()
 
@@ -41,6 +42,7 @@ class UnsupportedObjectException(Exception):
 
 def detect_planar(thisObj, tol):
 	meshVertices = []
+	meshEdges = []
 	isPlanar = True
 
 	#Parse the selection for preliminary object-identification --------------
@@ -59,6 +61,7 @@ def detect_planar(thisObj, tol):
 					vertices = s.Brep.Vertices
 					meshVertices += vertices
 					isPlanar = False
+				meshEdges += [srf.Edges[0]]
 	elif rs.IsPoint(thisObj): 
 		vertices = rs.PointCoordinates(thisObj)
 		meshVertices += [vertices]
@@ -99,38 +102,36 @@ def detect_planar(thisObj, tol):
 	#	break
 
 	if isPlanar and rs.PointsAreCoplanar(meshVertices):  
-		return True, rs.PlaneFitFromPoints(meshVertices)
+		return True, rs.PlaneFitFromPoints(meshVertices), meshEdges
 	else:
-		return False, rs.ViewCPlane()
+		return False, rs.ViewCPlane(), meshEdges
 
 iBranch = selection.BranchCount
 ObjectTable = rs.scriptcontext.doc.Objects
 guidTable = set()
+rs.scriptcontext.doc = Rhino.RhinoDoc.ActiveDoc
 absTolerance =	Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
 DefaultTolerance = 0.1
 rs.EnableRedraw(False)
+thiscplane = rs.ViewCPlane()
+thisCplaneName = "Temp**MinBoundBox3d^^1" 
+ThisView = rs.CurrentView()															#String
+rs.AddNamedCPlane(thisCplaneName, ThisView)
 
 for i in range(iBranch):
 	branch = selection.Branch(i)
 	patternPath = selection.Path(i)
-
-	thiscplane = rs.ViewCPlane()
-	thisCplaneName = "Temp**MinBoundBox3d^^1" 
 	
 	for obj in branch:
 		#--Default values--
 		fStart = Rhino.Geometry.Vector3d(0, 0, 0)											#XY, XZ, YZ - In Degrees
 		fEnd = Rhino.Geometry.Vector3d(90, 90, 90)											#In Degrees
 		loopStep = Rhino.Geometry.Vector3d.Subtract(fEnd, fStart)							#LoopStep starts as the whole range
-		ThisView = rs.CurrentView()															#String
-
-		#rs.scriptcontext.doc = Rhino.RhinoDoc.ActiveDoc
-		rs.AddNamedCPlane(thisCplaneName, ThisView)
 
 		iteration = 0
 		_guid = ObjectTable.Add(obj)
 		guidTable.add(_guid)
-		isPlanar, detectedPlane = detect_planar(str(_guid), absTolerance)
+		isPlanar, detectedPlane, e = detect_planar(str(_guid), absTolerance)
 	
 		#--Main script
 		if isPlanar: 
@@ -139,14 +140,20 @@ for i in range(iBranch):
 		else:
 			startingCplane = thiscplane
 			loopStep = Rhino.Geometry.Vector3d.Divide(loopStep, iStepVolume)				#Initial LoopStep size
-
+		
 		while True:
-			aYZ = fStart[2] 
-			while aYZ < fEnd[2]:
-				aXZ = fStart[1]
-				while aXZ < fEnd[1]:
-					aXY = fStart[0]
-					while aXY < fEnd[0]:
+			aYZValS = [fStart[2] + v * loopStep[2] for v in range(int((fEnd[2] - fStart[2]) / loopStep[2]))]
+			aYZValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.YAxis)) % 90]
+
+			for aYZ in aYZValS:					
+				aXZValS = [fStart[1] + v * loopStep[1] for v in range(int((fEnd[1] - fStart[1]) / loopStep[1]))]
+				aXZValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.XAxis)) % 90]
+
+				for aXZ in aXZValS:
+					aXYValS = [fStart[0] + v * loopStep[0] for v in range(int((fEnd[0] - fStart[0]) / loopStep[0]))]
+					aXYValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.XAxis)) % 90]
+
+					for aXY in aXYValS:
 						iteration += 1
 
 						#calculate cPlane rotation
@@ -156,7 +163,7 @@ for i in range(iBranch):
 							tempCplane = rs.RotatePlane(startingCplane, aYZ, startingCplane[1])   
 							tempCplane = rs.RotatePlane(tempCplane, aXZ, tempCplane[2])
 							tempCplane = rs.RotatePlane(tempCplane, aXY, tempCplane[3])
-						rs.ViewCPlane(ThisView, tempCplane)									#commit the rotation
+						rs.ViewCPlane(ThisView, tempCplane)											#commit the rotation
 
 						#--Bounding box for this iteration
 						tempBox = rs.BoundingBox(str(_guid), ThisView, True)						#cPlane aligned, but using world coordinates
@@ -166,11 +173,11 @@ for i in range(iBranch):
 						zSpan = rs.VectorLength(rs.VectorSubtract(tempBox[4], tempBox[0]))
 
 						#Metric to be minimized over time
-						if not isPlanar and		isBoundaryOpt: boxMetric_now = 2 * xSpan * ySpan + 2 * xSpan * zSpan + 2 * ySpan * zSpan	#Area
-						if not isPlanar and not isBoundaryOpt: boxMetric_now = xSpan * ySpan * zSpan										#Volume
+						if	not	isPlanar and		isBoundaryOpt: boxMetric_now = 2 * xSpan * ySpan + 2 * xSpan * zSpan + 2 * ySpan * zSpan	#Area
+						if	not	isPlanar and	not isBoundaryOpt: boxMetric_now = xSpan * ySpan * zSpan										#Volume
 
-						if isPlanar and		isBoundaryOpt: boxMetric_now = 2 * xSpan + 2 * ySpan											#Perimeter
-						if isPlanar and not isBoundaryOpt: boxMetric_now = xSpan * ySpan													#Area
+						if		isPlanar and		isBoundaryOpt: boxMetric_now = 2 * xSpan + 2 * ySpan											#Perimeter
+						if		isPlanar and	not isBoundaryOpt: boxMetric_now = xSpan * ySpan													#Area
 
 						#error detect
 						if	(xSpan < epsilon \
@@ -198,28 +205,15 @@ for i in range(iBranch):
 							boxMetric_start = boxMetric_min									#boxMetric_start is the known min at the beginning of this parsing
 		
 						#DETECT MIMIMUM ---------------------------------------------------
+						if doDrawIterationBoxes:
+							rs.AddBox(tempBox)
 						if boxMetric_now < boxMetric_min:
 							#--Found new minimum
 							boxMetric_delta = boxMetric_start - boxMetric_now				#The difference between the min box and the starting box from the beginning of this parsing
 							boxMetric_min = boxMetric_now
-							if doDrawIterationBoxes:
-								rs.AddBox(tempBox)
+
 							bbox_min = tempBox												#This is the box to be drawn on screen
 							angle_min = Rhino.Geometry.Vector3d(aXY, aXZ, aYZ)
-						aXY += loopStep[0]
-
-						#if iteration == iMaxIteration:
-						#	break
-					#if iteration == iMaxIteration:
-					#	break
-					if isPlanar:
-						break
-					aXZ += loopStep[1]
-				#if iteration == iMaxIteration:
-				#	break
-				if isPlanar:
-					break
-				aYZ += loopStep[2]
 	
 			#--Tighten the loop parameters
 			#--There is an issue in that this method might be getting stuck into local minima
@@ -240,8 +234,9 @@ for i in range(iBranch):
 	
 		#--Reset to original cplane
 		rs.RestoreNamedCPlane(thisCplaneName, ThisView)
-		rs.DeleteNamedCPlane(thisCplaneName)
 rs.EnableRedraw(True)
+
+rs.DeleteNamedCPlane(thisCplaneName)
 
 for _guid in guidTable:
 	rs.DeleteObject(_guid)
