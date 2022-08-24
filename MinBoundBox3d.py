@@ -10,6 +10,7 @@ __version__ = "2022.07.01"
 	iStepDivider:			Divider;																		default: 4
 	iMaxIteration:			Max number of iterations;														default: 1000
 	doDrawIterationBoxes:	if True, draws a box for every iteration step									default: False
+	iRandomEdge				number of randomly picked edges													
 """
 
 #----------------------------------------------------------------------------------
@@ -33,7 +34,8 @@ from Grasshopper.Kernel.Data import GH_Path as Path
 from System import Array, Guid
 import Rhino
 import ghpythonlib.components as ghcomp
-from math import atan
+from math import atan, isnan
+from random import choice
 
 result = Tree[object]()
 
@@ -61,7 +63,7 @@ def detect_planar(thisObj, tol):
 					vertices = s.Brep.Vertices
 					meshVertices += vertices
 					isPlanar = False
-				meshEdges += [srf.Edges[0]]
+				meshEdges += srf.Edges
 	elif rs.IsPoint(thisObj): 
 		vertices = rs.PointCoordinates(thisObj)
 		meshVertices += [vertices]
@@ -109,14 +111,10 @@ def detect_planar(thisObj, tol):
 iBranch = selection.BranchCount
 ObjectTable = rs.scriptcontext.doc.Objects
 guidTable = set()
-rs.scriptcontext.doc = Rhino.RhinoDoc.ActiveDoc
 absTolerance =	Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
 DefaultTolerance = 0.1
 rs.EnableRedraw(False)
-thiscplane = rs.ViewCPlane()
-thisCplaneName = "Temp**MinBoundBox3d^^1" 
-ThisView = rs.CurrentView()															#String
-rs.AddNamedCPlane(thisCplaneName, ThisView)
+
 
 for i in range(iBranch):
 	branch = selection.Branch(i)
@@ -129,9 +127,16 @@ for i in range(iBranch):
 		loopStep = Rhino.Geometry.Vector3d.Subtract(fEnd, fStart)							#LoopStep starts as the whole range
 
 		iteration = 0
+		thiscplane = rs.ViewCPlane()
+		thisCplaneName = "Temp**MinBoundBox3d^^1" 
+		ThisView = rs.CurrentView()																	#String
+		rs.AddNamedCPlane(thisCplaneName, ThisView)
 		_guid = ObjectTable.Add(obj)
-		guidTable.add(_guid)
+		#guidTable.add(_guid)
 		isPlanar, detectedPlane, e = detect_planar(str(_guid), absTolerance)
+
+		#iRandomEdge = 5
+		randomEdges = {choice(e) for _ in range(iRandomEdge)}
 	
 		#--Main script
 		if isPlanar: 
@@ -142,16 +147,25 @@ for i in range(iBranch):
 			loopStep = Rhino.Geometry.Vector3d.Divide(loopStep, iStepVolume)				#Initial LoopStep size
 		
 		while True:
-			aYZValS = [fStart[2] + v * loopStep[2] for v in range(int((fEnd[2] - fStart[2]) / loopStep[2]))]
-			aYZValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.YAxis)) % 90]
+			aYZValS = {fStart[2] + v * loopStep[2] for v in range(int((fEnd[2] - fStart[2]) / loopStep[2]))}
+			if iteration == 0:
+				vProjectedYZ = {Rhino.Geometry.Vector3d(0, rE.TangentAtStart.Y, rE.TangentAtStart.Z) for rE in randomEdges}
+				aYZValS |= {Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.YAxis)) % 90 for v in vProjectedYZ}
+				aYZValS |= {90 - Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.YAxis)) % 90 for v in vProjectedYZ}
 
-			for aYZ in aYZValS:					
-				aXZValS = [fStart[1] + v * loopStep[1] for v in range(int((fEnd[1] - fStart[1]) / loopStep[1]))]
-				aXZValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.XAxis)) % 90]
+			for aYZ in aYZValS:		
+				aXZValS = {fStart[1] + v * loopStep[1] for v in range(int((fEnd[1] - fStart[1]) / loopStep[1]))}
+				if iteration == 0:
+					vProjectedXZ = {Rhino.Geometry.Vector3d(randomEdge.TangentAtStart.X, 0, randomEdge.TangentAtStart.Z) for rE in randomEdges}
+					aXZValS |= {Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.XAxis)) % 90 for v in vProjectedXZ}
+					aXZValS |= {90 - Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.XAxis)) % 90 for v in vProjectedXZ}
 
 				for aXZ in aXZValS:
-					aXYValS = [fStart[0] + v * loopStep[0] for v in range(int((fEnd[0] - fStart[0]) / loopStep[0]))]
-					aXYValS += [Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(e[0].TangentAtStart, thiscplane.XAxis)) % 90]
+					aXYValS = {fStart[0] + v * loopStep[0] for v in range(int((fEnd[0] - fStart[0]) / loopStep[0]))}
+					if iteration == 0:
+						vProjectedXY = {Rhino.Geometry.Vector3d(randomEdge.TangentAtStart.X, randomEdge.TangentAtStart.Y, 0) for rE in randomEdges}
+						aXYValS |= {Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.XAxis)) % 90 for v in vProjectedXY}
+						aXYValS |= {90 - Rhino.RhinoMath.ToDegrees(Rhino.Geometry.Vector3d.VectorAngle(v, thiscplane.XAxis)) % 90 for v in vProjectedXY}
 
 					for aXY in aXYValS:
 						iteration += 1
@@ -160,17 +174,21 @@ for i in range(iBranch):
 						if isPlanar:
 							tempCplane = rs.RotatePlane(startingCplane, aXY, startingCplane.ZAxis)
 						else:
-							tempCplane = rs.RotatePlane(startingCplane, aYZ, startingCplane[1])   
-							tempCplane = rs.RotatePlane(tempCplane, aXZ, tempCplane[2])
-							tempCplane = rs.RotatePlane(tempCplane, aXY, tempCplane[3])
+							tempCplane = rs.RotatePlane(startingCplane, aYZ, startingCplane.XAxis)   
+							tempCplane = rs.RotatePlane(tempCplane, aXZ, tempCplane.YAxis)
+							tempCplane = rs.RotatePlane(tempCplane, aXY, tempCplane.ZAxis)
 						rs.ViewCPlane(ThisView, tempCplane)											#commit the rotation
 
 						#--Bounding box for this iteration
 						tempBox = rs.BoundingBox(str(_guid), ThisView, True)						#cPlane aligned, but using world coordinates
 
-						xSpan = rs.VectorLength(rs.VectorSubtract(tempBox[1], tempBox[0]))
-						ySpan = rs.VectorLength(rs.VectorSubtract(tempBox[3], tempBox[0]))
-						zSpan = rs.VectorLength(rs.VectorSubtract(tempBox[4], tempBox[0]))
+						try:
+							xSpan = rs.VectorLength(rs.VectorSubtract(tempBox[1], tempBox[0]))
+							ySpan = rs.VectorLength(rs.VectorSubtract(tempBox[3], tempBox[0]))
+							zSpan = rs.VectorLength(rs.VectorSubtract(tempBox[4], tempBox[0]))
+						except TypeError:
+							iteration -= 1
+							continue
 
 						#Metric to be minimized over time
 						if	not	isPlanar and		isBoundaryOpt: boxMetric_now = 2 * xSpan * ySpan + 2 * xSpan * zSpan + 2 * ySpan * zSpan	#Area
@@ -234,10 +252,11 @@ for i in range(iBranch):
 	
 		#--Reset to original cplane
 		rs.RestoreNamedCPlane(thisCplaneName, ThisView)
+		rs.DeleteObject(_guid)
 rs.EnableRedraw(True)
 
 rs.DeleteNamedCPlane(thisCplaneName)
 
-for _guid in guidTable:
-	rs.DeleteObject(_guid)
+#for _guid in guidTable:
+#	rs.DeleteObject(_guid)
 
