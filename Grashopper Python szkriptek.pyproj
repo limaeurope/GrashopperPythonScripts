@@ -26,6 +26,7 @@
     <Compile Include="CountWindowsBySize.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LineCollector.py" />
     <Compile Include="MinBoundBox3d.py">
       <SubType>Code</SubType>
     </Compile>
